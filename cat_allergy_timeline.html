@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Macska Fehérje Expozíciós Idővonal</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #0f0f1a;
+    color: #e0e0f0;
+    padding: 24px;
+    min-height: 100vh;
+  }
+  h1 { font-size: 1.6rem; color: #c9b4ff; margin-bottom: 4px; }
+  .subtitle { color: #888; font-size: 0.85rem; margin-bottom: 28px; }
+
+  /* ── SECTION TITLES ── */
+  h2 { font-size: 1.1rem; color: #a8c4ff; margin: 32px 0 12px; border-left: 3px solid #5577ff; padding-left: 10px; }
+
+  /* ── TIMELINE ── */
+  .timeline { display: flex; flex-direction: column; gap: 0; position: relative; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 130px;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, #333 0%, #5577ff 40%, #ff5577 80%, #55ff99 100%);
+  }
+
+  .phase {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    padding: 10px 0;
+    position: relative;
+  }
+  .phase-date {
+    width: 120px;
+    text-align: right;
+    font-size: 0.72rem;
+    color: #888;
+    padding-right: 16px;
+    padding-top: 14px;
+    flex-shrink: 0;
+    line-height: 1.4;
+  }
+  .phase-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    margin-top: 12px;
+    margin-left: -6px;
+    flex-shrink: 0;
+    border: 2px solid #0f0f1a;
+    z-index: 1;
+  }
+  .phase-card {
+    margin-left: 18px;
+    background: #1a1a2e;
+    border: 1px solid #2a2a44;
+    border-radius: 10px;
+    padding: 12px 16px;
+    flex: 1;
+    max-width: 820px;
+  }
+  .phase-card h3 { font-size: 0.95rem; margin-bottom: 8px; }
+  .phase-card .food-note { font-size: 0.75rem; color: #aaa; margin-bottom: 10px; font-style: italic; }
+
+  /* protein chips */
+  .proteins { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .chip {
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .chip .pct { font-weight: 400; opacity: 0.8; font-size: 0.68rem; }
+
+  /* omega3 row */
+  .omega { font-size: 0.73rem; color: #64c8ff; margin-top: 4px; }
+  .omega span { background: #0d2a3d; border: 1px solid #1a4a6a; border-radius: 4px; padding: 2px 7px; margin-right: 4px; display: inline-block; }
+
+  /* event flag */
+  .event-flag {
+    background: #3d1010;
+    border: 1px solid #ff4444;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 0.75rem;
+    color: #ff8888;
+    margin-top: 6px;
+    display: inline-block;
+  }
+  .good-flag {
+    background: #0f3020;
+    border: 1px solid #44ff88;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 0.75rem;
+    color: #88ffbb;
+    margin-top: 6px;
+    display: inline-block;
+  }
+
+  /* ── PROTEIN LEGEND COLORS ── */
+  /* Poultry family */
+  .p-chicken    { background:#3b2a6e; color:#c4a8ff; border:1px solid #7755cc; }
+  .p-turkey     { background:#2a3b6e; color:#a8c4ff; border:1px solid #5577cc; }
+  .p-egg        { background:#4a3820; color:#ffd080; border:1px solid #cc8800; }
+  .p-feather-h  { background:#2d2d2d; color:#aaa; border:1px solid #666; }
+  /* Fish family */
+  .p-tuna       { background:#0d2d3a; color:#44d4ff; border:1px solid #007aaa; }
+  .p-cod        { background:#0d3a2d; color:#44ffcc; border:1px solid #00aa77; }
+  .p-salmon     { background:#3a1a00; color:#ff9944; border:1px solid #cc5500; }
+  .p-herring    { background:#1a2d3a; color:#77aaff; border:1px solid #335588; }
+  .p-mackerel   { background:#1a3a2a; color:#55ddaa; border:1px solid #227755; }
+  .p-shrimp     { background:#3a1a1a; color:#ffaaaa; border:1px solid #884444; }
+  .p-pollock    { background:#1a2a2a; color:#88cccc; border:1px solid #336666; }
+  .p-fish-hyd   { background:#1a1a3a; color:#aaaaff; border:1px solid #444488; }
+  /* Mammal */
+  .p-goat       { background:#2a3a1a; color:#aadd77; border:1px solid #557722; }
+  /* Plant */
+  .p-plant      { background:#2a2a1a; color:#cccc77; border:1px solid #777722; }
+  /* Hydrolysate special */
+  .p-hydro      { background:#2d2020; color:#ccaaaa; border:1px solid #664444; }
+
+  /* ── EXPOSURE MATRIX ── */
+  .matrix-wrap { overflow-x: auto; margin-top: 8px; }
+  table.matrix {
+    border-collapse: collapse;
+    font-size: 0.72rem;
+    min-width: 600px;
+  }
+  .matrix th {
+    background: #1a1a2e;
+    padding: 6px 10px;
+    text-align: left;
+    color: #a8c4ff;
+    border-bottom: 2px solid #333;
+    white-space: nowrap;
+  }
+  .matrix td {
+    padding: 5px 10px;
+    border-bottom: 1px solid #1e1e2e;
+    white-space: nowrap;
+  }
+  .matrix tr:hover td { background: #1e1e2e; }
+  .cell-yes  { color: #ff6666; font-weight: 700; text-align: center; }
+  .cell-no   { color: #333; text-align: center; }
+  .cell-name { color: #ddd; }
+  .cell-family { color: #888; font-size: 0.68rem; }
+  .cell-status-exposed { color: #ff8888; font-size: 0.68rem; }
+  .cell-status-never   { color: #55ff99; font-size: 0.68rem; font-weight: 600; }
+  .cell-status-tolerated { color: #aaffdd; font-size: 0.68rem; }
+
+  /* ── OMEGA TABLE ── */
+  table.omega-table { border-collapse: collapse; font-size: 0.75rem; width: 100%; max-width: 700px; }
+  .omega-table th { background: #1a1a2e; padding: 7px 12px; color: #64c8ff; border-bottom: 2px solid #333; text-align: left; }
+  .omega-table td { padding: 6px 12px; border-bottom: 1px solid #1e1e2e; }
+  .omega-table tr:hover td { background: #1e1e2e; }
+  .safe-alt { color: #55ff99; font-weight: 600; }
+  .risky    { color: #ff7777; }
+
+  /* ── NOTES BOX ── */
+  .note-box {
+    background: #1a1a0a;
+    border: 1px solid #554400;
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-size: 0.8rem;
+    color: #ddcc88;
+    margin-top: 8px;
+    line-height: 1.7;
+  }
+  .note-box strong { color: #ffdd66; }
+
+  /* ── RESPONSIVE — TABLET ── */
+  @media (max-width: 640px) {
+    body { padding: 16px; }
+    .timeline::before { left: 90px; }
+    .phase-date { width: 80px; font-size: 0.68rem; }
+    .phase-card h3 { font-size: 0.88rem; }
+  }
+
+  /* ── RESPONSIVE — MOBILE (iPhone) ── */
+  @media (max-width: 480px) {
+    body { padding: 12px; -webkit-text-size-adjust: 100%; }
+    h1 { font-size: 1.25rem; }
+    h2 { font-size: 0.98rem; margin: 20px 0 10px; }
+
+    /* Timeline: date above card, no vertical line */
+    .timeline::before { display: none; }
+    .phase { flex-direction: column; padding: 6px 0; gap: 0; border-bottom: 1px solid #1e1e2e; }
+    .phase:last-child { border-bottom: none; }
+    .phase-date {
+      width: auto;
+      text-align: left;
+      font-size: 0.7rem;
+      color: #7799cc;
+      padding: 2px 0 4px 8px;
+      border-left: 3px solid #5577ff;
+      margin-bottom: 6px;
+    }
+    .phase-dot { display: none; }
+    .phase-card {
+      margin-left: 0;
+      max-width: 100%;
+      border-radius: 8px;
+    }
+    .phase-card h3 { font-size: 0.85rem; line-height: 1.4; }
+    .phase-card .food-note { font-size: 0.72rem; }
+
+    /* Chips — slightly bigger touch targets */
+    .chip { font-size: 0.69rem; padding: 4px 9px; }
+
+    /* Force single column on inline 2-col grids */
+    [style*="grid-template-columns:1fr 1fr"],
+    [style*="grid-template-columns: 1fr 1fr"] {
+      grid-template-columns: 1fr !important;
+    }
+
+    /* Product card badges: allow wrap */
+    .phase-card [style*="justify-content:space-between"],
+    div[style*="border-radius:12px"] > div[style*="justify-content:space-between"] {
+      flex-wrap: wrap;
+      gap: 6px !important;
+    }
+
+    /* Readable base size for card content */
+    .note-box { font-size: 0.75rem; }
+    .omega { font-size: 0.7rem; }
+    .omega span { display: inline-block; margin-bottom: 3px; }
+
+    /* Flags full-width */
+    .event-flag, .good-flag { display: block; }
+
+    /* Matrix table scroll */
+    .matrix-wrap { -webkit-overflow-scrolling: touch; }
+
+    /* Footer */
+    body > div:last-of-type { font-size: 0.65rem; }
+  }
+
+  /* ── RESPONSIVE — SMALL PHONES (SE, etc.) ── */
+  @media (max-width: 360px) {
+    body { padding: 8px; }
+    .chip { font-size: 0.64rem; padding: 3px 7px; }
+    h1 { font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+
+<h1>🐱 Macska Fehérje Expozíciós Idővonal</h1>
+<p class="subtitle">Eliminációs &amp; provokációs diéta nyomkövető · Születés kb. 2025. június · Miliáris dermatitis kivizsgálás</p>
+
+<!-- ═══════════════════════════ TIMELINE ═══════════════════════════ -->
+<h2>Diéta Idővonala</h2>
+<div class="timeline">
+
+  <!-- PHASE 1 – Whiskas Kitten -->
+  <div class="phase">
+    <div class="phase-date">2025. jún–aug.<br>~3 hónap</div>
+    <div class="phase-dot" style="background:#7755cc;"></div>
+    <div class="phase-card">
+      <h3 style="color:#c4a8ff;">Whiskas Kitten (száraz) <span style="font-weight:400;font-size:0.8rem;color:#888">+ Churu tonhalas snack</span></h3>
+      <div class="food-note">Nyersfehérje ≈35–41% · Magas gabonatartalmú recept</div>
+      <div class="proteins">
+        <span class="chip p-chicken">🐔 Baromfi melléktermék liszt <span class="pct">(elsődleges)</span></span>
+        <span class="chip p-chicken">🐔 Csirke <span class="pct">~4%</span></span>
+        <span class="chip p-plant">🌿 Kukoricaglutén liszt <span class="pct">(növényi fehérje)</span></span>
+        <span class="chip p-plant">🌿 Szójadara <span class="pct">(növényi fehérje)</span></span>
+        <span class="chip p-tuna">🐟 Tonhal <span class="pct">(Churu snack)</span></span>
+      </div>
+      <div class="omega">Omega-3: <span>Nem jelentős / nincs feltüntetve</span></div>
+    </div>
+  </div>
+
+  <!-- PHASE 2 – Royal Canin Kitten -->
+  <div class="phase">
+    <div class="phase-date">2025. szept.<br>~1 hónap</div>
+    <div class="phase-dot" style="background:#5577cc;"></div>
+    <div class="phase-card">
+      <h3 style="color:#a8c4ff;">Royal Canin Kitten (száraz) <span style="font-weight:400;font-size:0.8rem;color:#888">+ Churu tonhalas snack</span></h3>
+      <div class="food-note">Nyersfehérje ≥34%</div>
+      <div class="proteins">
+        <span class="chip p-chicken">🐔 Csirke melléktermék liszt <span class="pct">(elsődleges)</span></span>
+        <span class="chip p-egg">🥚 Tojástermék</span>
+        <span class="chip p-tuna">🐟 Tonhal <span class="pct">(Churu snack)</span></span>
+      </div>
+      <div class="omega">Omega-3: <span>Halaolaj (forrás és mennyiség nincs megadva)</span></div>
+    </div>
+  </div>
+
+  <!-- PHASE 3 – Farmina ND Ocean -->
+  <div class="phase">
+    <div class="phase-date">2025. okt.<br>~1 hónap</div>
+    <div class="phase-dot" style="background:#00aa77;"></div>
+    <div class="phase-card">
+      <h3 style="color:#44ffcc;">Farmina N&D Ocean Kitten (száraz) <span style="font-weight:400;font-size:0.8rem;color:#888">+ Churu tonhalas snack</span></h3>
+      <div class="food-note">Nyersfehérje ≥44% · Gabonamentes · Erősen halas recept</div>
+      <div class="proteins">
+        <span class="chip p-cod">🐟 Tőkehal <span class="pct">(elsődleges)</span></span>
+        <span class="chip p-cod">🐟 Szárított tőkehal</span>
+        <span class="chip p-fish-hyd">🐟 Hidrolizált hal</span>
+        <span class="chip p-shrimp">🦐 Garnélarák <span class="pct">(szárított)</span></span>
+        <span class="chip p-herring">🐟 Szárított hering</span>
+        <span class="chip p-tuna">🐟 Tonhal <span class="pct">(Churu snack)</span></span>
+      </div>
+      <div class="omega">Omega-3: <span>Heringolaj</span> <span>DHA ≥0,70%</span> <span>EPA ≥0,40%</span> <span>Összes Ω3 ≥1,40%</span></div>
+    </div>
+  </div>
+
+  <!-- PHASE 4 – Orijen Kitten -->
+  <div class="phase">
+    <div class="phase-date">2025. nov.–2026. jan.<br>~3 hónap</div>
+    <div class="phase-dot" style="background:#cc5500;"></div>
+    <div class="phase-card">
+      <h3 style="color:#ff9944;">Orijen Kitten (száraz) <span style="font-weight:400;font-size:0.8rem;color:#888">+ Churu tonhalas snack</span></h3>
+      <div class="food-note">Nyersfehérje ≥40% · 90% állati összetevő · Legnagyobb fehérjediverzitás</div>
+      <div class="proteins">
+        <span class="chip p-chicken">🐔 Friss csirkehús <span class="pct">27,5%</span></span>
+        <span class="chip p-turkey">🦃 Fagyasztott pulykahús <span class="pct">11%</span></span>
+        <span class="chip p-salmon">🐟 Lazac <span class="pct">5%</span></span>
+        <span class="chip p-herring">🐟 Egész hering <span class="pct">4%</span></span>
+        <span class="chip p-chicken">🐔 Csirkemáj <span class="pct">4%</span></span>
+        <span class="chip p-turkey">🦃 Pulykamáj <span class="pct">4%</span></span>
+        <span class="chip p-mackerel">🐟 Egész makréla <span class="pct">4%</span></span>
+        <span class="chip p-egg">🥚 Tojás <span class="pct">4%</span></span>
+        <span class="chip p-chicken">🐔 Csirkeliszt <span class="pct">4%</span></span>
+        <span class="chip p-turkey">🦃 Pulykaliszzt <span class="pct">4%</span></span>
+        <span class="chip p-herring">🐟 Heringliszt <span class="pct">4%</span></span>
+        <span class="chip p-pollock">🐟 Pollakkolaj <span class="pct">3%</span></span>
+        <span class="chip p-tuna">🐟 Tonhal <span class="pct">(Churu snack)</span></span>
+      </div>
+      <div class="omega">Omega-3: <span>Pollakkolaj</span> <span>Hering</span> <span>Lazac</span> <span>DHA ≥0,4%</span> <span>EPA ≥0,4%</span> <span>Összes Ω3 ≥1,2%</span></div>
+      <div class="event-flag">⚠️ Ebben az időszakban alakult ki a miliáris dermatitis / viszketés (pontos időpont bizonytalan — lehet Farmina vagy Orijen fázis)</div>
+    </div>
+  </div>
+
+  <!-- EVENT – Jan 17: Preoperatív vizsgálat -->
+  <div class="phase">
+    <div class="phase-date">2026. jan. 17.<br>állatorvos</div>
+    <div class="phase-dot" style="background:#4455aa;"></div>
+    <div class="phase-card" style="border-color:#334488;">
+      <h3 style="color:#a8c4ff;">🏥 EteleVet — Ivartalanítás előtti vizsgálat <span style="font-weight:400;font-size:0.8rem;color:#888">Dr. Karsai Szófia Ludmilla</span></h3>
+      <div class="food-note">Súly: 3,1 kg · BCS 3/5 · Általános állapot jó · Bőrpanasz még nem dokumentált</div>
+      <div style="font-size:0.74rem;color:#ccc;line-height:1.7;margin-top:6px;">
+        Vérvétel, fizikális vizsgálat — minden paraméter normális. Nyálkahártyák halvány rózsavörösek, CRT &lt;2mp, fogazat rendben. Légzés, szívhangok, has tapintata normális. Csak benti cica, nincs panasz.<br>
+        <strong style="color:#a8c4ff;">Megjegyzés:</strong> Máshoz is bejelenthetik a macskát (bőrgyógyász?) — megkérdezi. Ivartalanítás időpontja: jan. 29. · Következő oltás: 2026.09.26. (NOBI-VAC TRICAT)
+      </div>
+    </div>
+  </div>
+
+  <!-- EVENT – Jan 29 – Márc 14: Ivartlanítás + allergia gyanú -->
+  <div class="phase">
+    <div class="phase-date">2026. jan. 29. –<br>márc. 14. állatorvos</div>
+    <div class="phase-dot" style="background:#5577ff;"></div>
+    <div class="phase-card" style="border-color:#334488;">
+      <h3 style="color:#a8c4ff;">🏥 EteleVet — Ivartlanítás + allergodermatitis gyanú <span style="font-weight:400;font-size:0.8rem;color:#888">Dr. Karsai Szófia Ludmilla</span></h3>
+      <div class="food-note">Ovariectomia · büzmirigy öblítés · chipbeültetés · fülmosás · sc Penstrep + Meloslute · műtéti body</div>
+      <div style="font-size:0.74rem;color:#ccc;line-height:1.7;margin-top:6px;">
+        <strong style="color:#a8c4ff;">01.29 (műtét) — Súly: 2,9 kg:</strong> Kanülálás, bódítás, intubálás, isofluranos altatás, OE (ovariectomia).<br>
+        <strong style="color:#a8c4ff;">01.30:</strong> Műtét utáni kontroll — jól eszik/iszik. Ruha zavarja. Kemény kakálás, faroktő rágása. Fejét rázza. → Meloxidly szirup 3 napig, hidrokortizones oldat farkánál.<br>
+        <strong style="color:#a8c4ff;">02.09 — Súly: 3,1 kg:</strong> Varratszedés. Nyalja végbéltájékot, perianalis terület pirosra rágva, fülben barna tart. →
+        <span style="background:#2a1500;border:1px solid #aa6600;border-radius:4px;padding:1px 7px;color:#ffcc66;font-weight:700;">⭐ 8 hetes eliminációs diéta javasolt allergodermatitis gyanú miatt!</span>
+        (Tápok listáját küldik.)<br>
+        <strong style="color:#a8c4ff;">02.16 — Súly: 3,2 kg:</strong> RC Gastrointestinal Low Fat mintát próbáltak →
+        <span style="background:#0f3020;border:1px solid #44ff88;border-radius:4px;padding:1px 7px;color:#88ffbb;font-weight:700;">jobb kakálás + viszketés csökkent!</span>
+        Seb sokkal szebb. Szövetragasztóval sebragasztás.<br>
+        <strong style="color:#a8c4ff;">03.14 — Súly: 3,6 kg:</strong> BM tisztítás. Faroktőnél ismét kipirulás, pustuláció több helyen. Fül előtt szőrritkulás kezdődik. →
+        <span style="background:#2a0a2a;border:1px solid #884488;border-radius:4px;padding:1px 7px;color:#ddaadd;font-weight:700;">💊 Apoquel 3,4 mg/nap (2×½ tab) 10 napig felírva</span>
+        + kék lukács kenőcs.
+      </div>
+      <div class="note-box" style="margin-top:8px;font-size:0.73rem;">
+        <strong>⭐ Kulcsmegfigyelés (02.16):</strong> RC Gastrointestinal Low Fat főleg csirke alapú — viszketés enyhült rajta. Ez erősen csökkenti a csirkeallergia valószínűségét és megerősíti, hogy a hal az elsődleges allergén.<br>
+        <strong>⚠️ Megjegyzés:</strong> Az alk. diéta javasolt volt már febr. 9-én, de csak márc. 26-án kezdték el — 6 hetes késés.
+      </div>
+    </div>
+  </div>
+
+  <!-- EVENT – 2026.03.24: Allergiagyanú, tápváltás megkezdése -->
+  <div class="phase">
+    <div class="phase-date">2026. márc. 24.<br>állatorvos</div>
+    <div class="phase-dot" style="background:#5577ff;"></div>
+    <div class="phase-card" style="border-color:#334488;">
+      <h3 style="color:#a8c4ff;">🏥 EteleVet — Allergiagyanú, tápváltás + bolhakezelés <span style="font-weight:400;font-size:0.8rem;color:#888">Dr. Karsai Szófia Ludmilla</span></h3>
+      <div class="food-note">Súly: 3,6 kg · Diagnózis: <strong style="color:#ffcc66;">allergodermatitis?? + Neurogén dermatitis??</strong></div>
+      <div style="font-size:0.74rem;color:#ccc;line-height:1.7;margin-top:6px;">
+        Farka alatt büzmirigy körül bőr csúnya és sebes. Jelenleg kap: Apoquel. Gazdák étel/bolha allergiára gyanakodnak. Farka alatti seb fekélyesedik, hátán fekélyes seb, pustulák. MKO fülben kevesebb barna tart. Fül előtt szőrzet kezd sűrűsödni (javulás).
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+        <span style="background:#1a0a2a;border:1px solid #7744aa;border-radius:4px;padding:3px 8px;font-size:0.71rem;color:#ddaaff;">💊 Credelio p.o. — bolhairtó (FAD kizárása)</span>
+        <span style="background:#1a0a2a;border:1px solid #7744aa;border-radius:4px;padding:3px 8px;font-size:0.71rem;color:#ddaaff;">💊 Prednisolon ½×5mg/nap × 1 hét</span>
+        <span style="background:#1a0a2a;border:1px solid #9955bb;border-radius:4px;padding:3px 8px;font-size:0.71rem;color:#ffbbff;">💊 Neurontin (gabapentin) ½×100mg/nap × 1 hét — neuropátiás viszketés ellen</span>
+        <span style="background:#1a1a0a;border:1px solid #666600;border-radius:4px;padding:3px 8px;font-size:0.71rem;color:#dddd88;">🛁 Malaseb sampon 2×/hét</span>
+        <span style="background:#1a1a0a;border:1px solid #666600;border-radius:4px;padding:3px 8px;font-size:0.71rem;color:#dddd88;">🔵 Gallér viselése sebgyógyulásig</span>
+      </div>
+      <div class="note-box" style="margin-top:8px;font-size:0.73rem;">
+        <strong style="color:#ffcc66;">Neurogén dermatitis differenciál:</strong> A gabapentin felírása azt jelzi, hogy az állatorvos felvetette a neuropátiás/pszichogén komponenst is (feline hyperesthesia / pszichogén alopecia). Ez nem zárja ki az allergiát — a kettő együtt is fennállhat: az allergiás viszketés kompulzív önnyalási szokást indíthat el.
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 5 – Royal Canin Anallergenic -->
+  <div class="phase">
+    <div class="phase-date">2026. márc. 26.<br>folyamatban</div>
+    <div class="phase-dot" style="background:#884444;"></div>
+    <div class="phase-card">
+      <h3 style="color:#ffaaaa;">Royal Canin Anallergenic (száraz) <span style="font-weight:400;font-size:0.8rem;color:#888">eliminációs fázis</span></h3>
+      <div class="food-note">Nyersfehérje 24,6% · Egyetlen hidrolizált fehérjeforrás · Eliminációs diétára tervezve</div>
+      <div class="proteins">
+        <span class="chip p-feather-h">🪶 Tollhidrolizátum <span class="pct">(erősen hidrolizált, 26,2%) — rendkívül kis mol. tömegű peptidek</span></span>
+      </div>
+      <div class="omega">Omega-3: <span>Halaolaj (forrás és mennyiség nincs megadva)</span></div>
+      <div class="note-box" style="margin-top:8px;">
+        A hidrolizált tollféhérje &lt;1 kDa-os töredékekre bomlik — az immunrendszer általában nem ismeri fel és nem reagál rájuk. Ez a „tiszta lap" eliminációs fázis. ⚠️ Halaolajt tartalmaz — halallergiás macskánál ez kérdéses.
+      </div>
+    </div>
+  </div>
+
+  <!-- EVENT – 2026.04.11: Tápváltás 2 hete kontroll -->
+  <div class="phase">
+    <div class="phase-date">2026. ápr. 11.<br>állatorvos</div>
+    <div class="phase-dot" style="background:#5577ff;"></div>
+    <div class="phase-card" style="border-color:#334488;">
+      <h3 style="color:#a8c4ff;">🏥 EteleVet — Tápváltás 2 hetes kontroll <span style="font-weight:400;font-size:0.8rem;color:#888">Dr. Karsai Szófia Ludmilla</span></h3>
+      <div class="food-note">Súly: 2,9 kg (dokumentum) · Hőmérséklet: 38,5°C · RC Anallergenic 2 hete</div>
+      <div style="font-size:0.74rem;color:#ccc;line-height:1.7;margin-top:6px;">
+        <span style="background:#0f3020;border:1px solid #44ff88;border-radius:4px;padding:2px 8px;color:#88ffbb;font-weight:700;">✅ Gazda javulást lát!</span>
+        Farka alatti seb gyógyul, hátán lévő seb is gyógyul. Pustula nem látható. MKO hallójárat feltisztult. Fül előtti szőrzet sűrűsödik.<br><br>
+        <strong style="color:#ffcc66;">⚠️ De: Apoquel 1 hete elfogyott → viszketés lassan visszatér.</strong> Ez jelzi, hogy az allergén-expozíció még fennáll (valószínűleg az RC Anallergenic halaolaj-tartalma).
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+        <span style="background:#1a0a2a;border:1px solid #7744aa;border-radius:4px;padding:3px 8px;font-size:0.71rem;color:#ddaaff;">💊 Prednisolon ½×5mg/nap × 10 nap (folytatás)</span>
+        <span style="background:#1a0a2a;border:1px solid #7744aa;border-radius:4px;padding:3px 8px;font-size:0.71rem;color:#ddaaff;">🥘 RC Anallergenic táp megerősítve</span>
+        <span style="background:#1a1a0a;border:1px solid #666600;border-radius:4px;padding:3px 8px;font-size:0.71rem;color:#dddd88;">📅 10 nap múlva kontroll javasolt</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 5a – Farmina Ultrahypo -->
+  <div class="phase">
+    <div class="phase-date">2026. máj. 7.<br>~15 g, 1 alkalom</div>
+    <div class="phase-dot" style="background:#ff2222;"></div>
+    <div class="phase-card">
+      <h3 style="color:#ff6666;">Farmina N&D Ultrahypo (száraz) <span style="font-weight:400;font-size:0.8rem;color:#888">rövid kóstolás — ERŐS REAKCIÓ</span></h3>
+      <div class="food-note">Nyersfehérje 28% · Hidrolizált tengeri hal fehérje (egyetlen forrás) · Veterinári hypoallergén recept</div>
+      <div class="proteins">
+        <span class="chip p-fish-hyd">🐟 Hidrolizált tengeri hal fehérje <span class="pct">(elsődleges — kis mol. tömegű peptidek, de HAL alapú!)</span></span>
+      </div>
+      <div class="omega">Omega-3: <span>Lazacolaj</span> <span>DHA ≥0,70%</span> <span>EPA ≥0,50%</span> <span>Összes Ω3 ≥1,70%</span></div>
+      <div class="event-flag" style="font-size:0.8rem;padding:8px 12px;">🚨 HEVES REAKCIÓ — mindössze ~15 g elfogyasztása után. Kulcsfontosságú adat: még a hidrolizált halféhérje is kiváltotta a tüneteket. Ez ERŐSEN megerősíti a halallergiát.</div>
+    </div>
+  </div>
+
+  <!-- PHASE 5b – Hill's z/d wet -->
+  <div class="phase">
+    <div class="phase-date">~2026. máj. közepe<br>kóstolás, nagyon kevés</div>
+    <div class="phase-dot" style="background:#cc8800;"></div>
+    <div class="phase-card">
+      <h3 style="color:#ffd080;">Hill's Prescription Diet z/d (nedves) <span style="font-weight:400;font-size:0.8rem;color:#888">rövid kóstolás</span></h3>
+      <div class="food-note">Nyersfehérje ~9% (nedves) · Hidrolizált csirkemáj fehérje · Allergiásoknak tervezett</div>
+      <div class="proteins">
+        <span class="chip p-feather-h">🐔 Hidrolizált csirkemáj <span class="pct">(elsődleges fehérje — nagyon kis mol. tömegű peptidek)</span></span>
+        <span class="chip p-plant">🌿 Kukoricakeményítő <span class="pct">(szénhidrát alap, nem búza)</span></span>
+      </div>
+      <div class="omega">Omega-3: <span>Halaolaj (DHA forrás, mennyiség nem megadva)</span></div>
+      <div class="event-flag">⚠️ Úgy tűnt, hogy evés után viszket — nagyon keveset evett belőle. Lehetséges ok: halaolaj a z/d-ben (nem a csirke). Nem egyértelmű kiváltó.</div>
+    </div>
+  </div>
+
+  <!-- PHASE 6 – Vet Concept Goat snack -->
+  <div class="phase">
+    <div class="phase-date">~2026. máj. 15.<br>utóbbi 2 hét</div>
+    <div class="phase-dot" style="background:#557722;"></div>
+    <div class="phase-card">
+      <h3 style="color:#aadd77;">Vet Concept Cat Allergy Goat <span style="font-weight:400;font-size:0.8rem;color:#888">snack / provokáció</span></h3>
+      <div class="food-note">Nyersfehérje 32,1% · Egyetlen új fehérjeforrás · Halamentes</div>
+      <div class="proteins">
+        <span class="chip p-goat">🐐 Kecskeliszt <span class="pct">30% — egyetlen állati fehérje</span></span>
+      </div>
+      <div class="omega">Omega-3: <span>0,3% (növényi alapú, nincs halaolaj)</span></div>
+      <div class="good-flag">✅ Nem észlelhető allergiás reakció — a kecske toleráltnak tűnik</div>
+    </div>
+  </div>
+
+  <!-- EVENT – 2026.05.30: Legutóbbi állatorvosi látogatás -->
+  <div class="phase">
+    <div class="phase-date">2026. máj. 30.<br>állatorvos</div>
+    <div class="phase-dot" style="background:#ff5577;"></div>
+    <div class="phase-card" style="border-color:#882244;">
+      <h3 style="color:#ffaabb;">🏥 EteleVet — Allergodermatitis + sebkontroll + féreghajtás <span style="font-weight:400;font-size:0.8rem;color:#888">Dr. Karsai Szófia Ludmilla</span></h3>
+      <div class="food-note">Diagnózis: <strong style="color:#ff6688;">allergodermatitis</strong> · Súly: 3,9 kg · Hőmérséklet: 38,5°C</div>
+      <div style="font-size:0.74rem;color:#ccc;line-height:1.7;margin-top:6px;">
+        Farka alatti seb megint kiterjedt, alopecia + felületes erosio a háton és hason is. MKO fül előtti szőrzet most intakt. Bajsza törik (önnyalás/önkárosítás jele). Levedzés nem látható.<br><br>
+        <strong style="color:#ffaabb;">Kórelőzmény összefoglalás a lapon:</strong> Farmina Ultrahypo nem vált be, Hills sem a csirke-hal miatt. Vet Concept Kecske jónak néz ki. Sebkontroll + féreghajtás.
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+        <span style="background:#1a0a2a;border:1px solid #7744aa;border-radius:4px;padding:3px 8px;font-size:0.71rem;color:#ddaaff;">💊 Prednicortone ½×5mg/nap × 1 hét (10 db)</span>
+        <span style="background:#1a0a0a;border:1px solid #772222;border-radius:4px;padding:3px 8px;font-size:0.71rem;color:#ffaaaa;">🧴 Octenisept + kék lukács kenőcs 2×/nap (5g)</span>
+        <span style="background:#1a1a0a;border:1px solid #666600;border-radius:4px;padding:3px 8px;font-size:0.71rem;color:#dddd88;">🛁 VetExpert Hypoallergén Sampon 250ml hetente</span>
+        <span style="background:#1a1a0a;border:1px solid #666600;border-radius:4px;padding:3px 8px;font-size:0.71rem;color:#dddd88;">👗 Body szuka 2 (sebvédelem)</span>
+        <span style="background:#1a1a0a;border:1px solid #666600;border-radius:4px;padding:3px 8px;font-size:0.71rem;color:#dddd88;">📅 Bőrkontroll 1 hét múlva</span>
+      </div>
+      <div class="good-flag" style="margin-top:8px;">✅ Súly 3,6 kg → 3,9 kg — az eliminációs diétán jól gyarapszik.</div>
+    </div>
+  </div>
+
+</div><!-- /timeline -->
+
+
+<!-- ═══════════════════════════ PROTEIN EXPOSURE MATRIX ═══════════════════════════ -->
+<h2>Fehérje Expozíciós Mátrix</h2>
+<div class="matrix-wrap">
+<table class="matrix">
+  <thead>
+    <tr>
+      <th>Fehérje</th>
+      <th>Csoport</th>
+      <th>Whiskas</th>
+      <th>RC Kitten</th>
+      <th>Farmina Ocean</th>
+      <th>Orijen</th>
+      <th>Churu snack</th>
+      <th>RC Anallerg.</th>
+      <th>VC Kecske</th>
+      <th>Státusz</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- POULTRY -->
+    <tr>
+      <td class="cell-name">🐔 Csirke / Baromfi</td>
+      <td class="cell-family">Baromfi</td>
+      <td class="cell-yes">✓</td><td class="cell-yes">✓</td><td class="cell-no">—</td><td class="cell-yes">✓</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td>
+      <td class="cell-status-exposed">Kitéve ×3</td>
+    </tr>
+    <tr>
+      <td class="cell-name">🦃 Pulyka</td>
+      <td class="cell-family">Baromfi</td>
+      <td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-yes">✓</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td>
+      <td class="cell-status-exposed">Kitéve ×1</td>
+    </tr>
+    <tr>
+      <td class="cell-name">🥚 Tojás</td>
+      <td class="cell-family">Baromfi</td>
+      <td class="cell-no">—</td><td class="cell-yes">✓</td><td class="cell-no">—</td><td class="cell-yes">✓</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td>
+      <td class="cell-status-exposed">Kitéve ×2</td>
+    </tr>
+    <!-- HAL -->
+    <tr>
+      <td class="cell-name">🐟 Tonhal</td>
+      <td class="cell-family">Hal</td>
+      <td class="cell-yes">✓</td><td class="cell-yes">✓</td><td class="cell-yes">✓</td><td class="cell-yes">✓</td><td class="cell-yes">✓</td><td class="cell-no">—</td><td class="cell-no">—</td>
+      <td class="cell-status-exposed">Kitéve ×5 (intenzív)</td>
+    </tr>
+    <tr>
+      <td class="cell-name">🐟 Tőkehal</td>
+      <td class="cell-family">Hal</td>
+      <td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-yes">✓</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td>
+      <td class="cell-status-exposed">Kitéve ×1</td>
+    </tr>
+    <tr>
+      <td class="cell-name">🐟 Lazac</td>
+      <td class="cell-family">Hal</td>
+      <td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-yes">✓</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td>
+      <td class="cell-status-exposed">Kitéve ×1</td>
+    </tr>
+    <tr>
+      <td class="cell-name">🐟 Hering</td>
+      <td class="cell-family">Hal</td>
+      <td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-yes">✓</td><td class="cell-yes">✓</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td>
+      <td class="cell-status-exposed">Kitéve ×2</td>
+    </tr>
+    <tr>
+      <td class="cell-name">🐟 Makréla</td>
+      <td class="cell-family">Hal</td>
+      <td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-yes">✓</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td>
+      <td class="cell-status-exposed">Kitéve ×1</td>
+    </tr>
+    <tr>
+      <td class="cell-name">🐟 Pollakk</td>
+      <td class="cell-family">Hal</td>
+      <td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-yes">✓</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td>
+      <td class="cell-status-exposed">Kitéve ×1 (olaj)</td>
+    </tr>
+    <tr>
+      <td class="cell-name">🦐 Garnélarák</td>
+      <td class="cell-family">Puhatestű</td>
+      <td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-yes">✓</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td>
+      <td class="cell-status-exposed">Kitéve ×1</td>
+    </tr>
+    <!-- EMLŐS -->
+    <tr>
+      <td class="cell-name">🐐 Kecske</td>
+      <td class="cell-family">Emlős</td>
+      <td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-yes">✓</td>
+      <td class="cell-status-tolerated">Tolerált ✅</td>
+    </tr>
+    <tr>
+      <td class="cell-name" style="color:#55ff99;">🐇 Nyúl</td>
+      <td class="cell-family">Emlős</td>
+      <td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td>
+      <td class="cell-status-never">Soha nem volt kitéve</td>
+    </tr>
+    <tr>
+      <td class="cell-name" style="color:#55ff99;">🦆 Kacsa</td>
+      <td class="cell-family">Baromfi</td>
+      <td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td>
+      <td class="cell-status-never">Soha nem volt kitéve</td>
+    </tr>
+    <tr>
+      <td class="cell-name" style="color:#55ff99;">🦌 Vadhús / Szarvas</td>
+      <td class="cell-family">Emlős</td>
+      <td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td>
+      <td class="cell-status-never">Soha nem volt kitéve</td>
+    </tr>
+    <tr>
+      <td class="cell-name" style="color:#55ff99;">🐗 Vaddisznó / Sertés</td>
+      <td class="cell-family">Emlős</td>
+      <td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td>
+      <td class="cell-status-never">Soha nem volt kitéve</td>
+    </tr>
+    <tr>
+      <td class="cell-name" style="color:#55ff99;">🦘 Kenguru</td>
+      <td class="cell-family">Emlős</td>
+      <td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td>
+      <td class="cell-status-never">Soha nem volt kitéve</td>
+    </tr>
+    <tr>
+      <td class="cell-name" style="color:#55ff99;">🐊 Krokodil / Aligátor</td>
+      <td class="cell-family">Hüllő</td>
+      <td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td><td class="cell-no">—</td>
+      <td class="cell-status-never">Soha nem volt kitéve</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+<!-- ═══════════════════════════ OMEGA-3 TABLE ═══════════════════════════ -->
+<h2>Omega-3 Források &amp; Halamentes Alternatívák</h2>
+<div class="note-box" style="margin-bottom:12px;">
+  <strong>Gyanított halallergia?</strong> Az eddigi diétájában minden érdemleges omega-3 halból származott (heringolaj, pollakkolaj, lazac, halaolaj). Ha a hal az allergén, halamentes omega-3 forrásra van szükség. Az alábbi lehetőségek állnak rendelkezésre.
+</div>
+<table class="omega-table">
+  <thead>
+    <tr><th>Forrás</th><th>Típus</th><th>Halamentes?</th><th>Omega-3 szint</th><th>Megjegyzés / Termékek</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Halaolaj</strong> (hering, pollakk, lazac)</td>
+      <td>EPA + DHA (kész formában)</td>
+      <td class="risky">❌ Nem</td>
+      <td>Magas</td>
+      <td>Minden eddigi táplálékban jelen volt. Gyanús forrás halallergia esetén.</td>
+    </tr>
+    <tr>
+      <td class="safe-alt"><strong>Zöldkagyló-olaj</strong></td>
+      <td>EPA + DHA (kész formában)</td>
+      <td style="color:#ffdd66;">⚠️ Puhatestű</td>
+      <td>Magas</td>
+      <td>Korábban volt kitéve garnélának — ellenőrizd, hogy a puhatestűek rendben vannak-e. Sok ízületi/bőr kiegészítőben szerepel.</td>
+    </tr>
+    <tr>
+      <td class="safe-alt"><strong>Algaolaj</strong> (mikroalga)</td>
+      <td>EPA + DHA (kész formában)</td>
+      <td class="safe-alt">✅ Igen</td>
+      <td>Magas</td>
+      <td>Legjobb halamentes opció. Ugyanolyan DHA/EPA mint a halban, de algából (ahonnan a halak is kapják). Folyékony kiegészítőként elérhető macskáknak. Keress: Veggie Pets Algae Oil, Nordic Naturals Algae Omega (emberi, dózist igazítsd).</td>
+    </tr>
+    <tr>
+      <td class="safe-alt"><strong>Lenmag- / lenolaj</strong></td>
+      <td>ALA (EPA/DHA-vá kell alakítani)</td>
+      <td class="safe-alt">✅ Igen</td>
+      <td>Közepes (csak ALA)</td>
+      <td>A macskák az ALA-t rosszul alakítják át (&lt;5% hatékonyság). Egyedüli EPA/DHA forrásként nem megbízható macskáknál.</td>
+    </tr>
+    <tr>
+      <td><strong>Kecskehús zsírja</strong> (Vet Concept)</td>
+      <td>ALA nyomokban</td>
+      <td class="safe-alt">✅ Igen</td>
+      <td>Nagyon alacsony (0,3%)</td>
+      <td>Eddig tolerált. Önmagában nem elegendő az omega-3 szükséglethez.</td>
+    </tr>
+  </tbody>
+</table>
+<div class="note-box" style="margin-top:10px;">
+  <strong>Javaslat:</strong> Az algaolaj (mikroalga DHA/EPA kiegészítő) a legtisztább halamentes omega-3 forrás halallergiára gyanús macskák esetén. Kész DHA-t és EPA-t biztosít halféhérje nélkül. Adj néhány cseppet a Vet Concept Kecske táplálékhoz az eliminációs fázisban (előbb egyeztesd az állatorvosoddal).
+</div>
+
+
+<!-- ═══════════════════════════ NEXT STEPS ═══════════════════════════ -->
+<h2>Kipróbálható Új Fehérjék (Provokációs jelöltek)</h2>
+<div class="note-box">
+  <strong>Soha nem volt kitéve (nincs korábbi szenzitizáció):</strong><br><br>
+  🐇 <strong>Nyúl</strong> — nagyon elterjedt hipoallergén egy-fehérjés táplálék (pl. Animonda Carny, Herrmann's Mono Rabbit)<br>
+  🦆 <strong>Kacsa</strong> — több egy-fehérjés nedves táplálékban elérhető (pl. Schesir Duck, Animonda Carny Duck)<br>
+  🦌 <strong>Vadhús / Szarvas</strong> — egyre több helyen elérhető (pl. Concept for Life Venison, Platinum Venison)<br>
+  🐗 <strong>Vaddisznó / Sertés</strong> — kevésbé elterjedt, de létezik (pl. Herrmann's Boar)<br>
+  🦘 <strong>Kenguru</strong> — niche termék, de EU-ban elérhető (pl. B.A.R.F. nyers, egyes Catz Finefood változatok)<br>
+  🐊 <strong>Krokodil / Aligátor</strong> — igen egzotikus, alacsony keresztreaktivitás, létezik snack formában<br><br>
+  <strong>Eddig tolerált és biztonságosnak ítélt:</strong> 🐐 Kecske ✅<br><br>
+  <strong>Protokoll tipp:</strong> Az eliminációs fázis alatt (RC Anallergenic) várj teljes remisszióig (jellemzően 8–12 hét). Ezután vezess be egyszerre egy új fehérjét, 2 hétre. Ha a reakció visszatér → az adott fehérje felelős.
+</div>
+
+<br>
+
+<!-- ═══════════════════════════ OTTHONI KÉSZLET ÉRTÉKELÉSE ═══════════════════════════ -->
+<h2>🛒 Otthoni Készlet Értékelése + Kiegészítő Javaslatok</h2>
+
+<div style="background:#0d1a0d;border:2px solid #ffcc00;border-radius:12px;padding:14px 18px;margin-bottom:16px;font-size:0.78rem;color:#ffeeaa;">
+  ⚠️ <strong>RC Anallergenic mellékhatás — BAJUSZ LETÖRÉS:</strong> A kizárólag tollhidrolizátum alapú diéta alacsony metionin, cisztin és lizin tartalommal bír — ezek a keratinszintézis (szőr, bajusz) kulcs aminosavai. A bajusz letörése táplálkozási hiányállapotra utal. Ez egyrészt indokolja a tápcsere mérlegelését, másrészt algaolaj + biotin kiegészítőt igényelhet.
+</div>
+
+<!-- PRODUCT CARDS -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+
+  <!-- Vet-Concept Nyúl -->
+  <div style="background:#0a1f0a;border:2px solid #44ff88;border-radius:12px;padding:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+      <div style="font-size:0.9rem;color:#88ffbb;font-weight:700;">🐇 Vet-Concept Cat Allergy Nyúl</div>
+      <span style="background:#004400;color:#55ff99;border-radius:20px;padding:2px 10px;font-size:0.68rem;font-weight:700;">✅ AJÁNLOTT #1</span>
+    </div>
+    <div style="font-size:0.72rem;color:#aaa;margin-bottom:8px;">Száraz · Nyúlhúsliszt 32,4% · Egyetlen állati fehérje · Soha nem volt kitéve</div>
+    <div style="font-size:0.72rem;color:#ccc;line-height:1.7;">
+      <strong style="color:#88ffbb;">Fehérje:</strong> Nyúl (egyetlen forrás) — novel, ismeretlen allergén kockázat nélkül<br>
+      <strong style="color:#88ffbb;">Omega-3:</strong> Lenolaj (ALA csak) — NINCS halaolaj ✅<br>
+      <strong style="color:#88ffbb;">Miért jó:</strong> Ugyanaz a gyártó mint a tolerált Kecske változat, ugyanaz a recept-logika. Ideális első provokáció.
+    </div>
+    <div style="background:#0f2a0f;border:1px solid #336633;border-radius:8px;padding:10px;margin-top:10px;font-size:0.71rem;color:#aaddaa;">
+      <strong style="color:#55ff99;">💊 Szükséges kiegészítő:</strong><br>
+      <strong>Algaolaj</strong> (mikroalga DHA+EPA) — a lenolaj nem elégséges macskának<br>
+      <strong>Dózis:</strong> 0,5 ml/nap az ételre cseppentve (~100–150 mg DHA+EPA)<br>
+      <strong>Termék:</strong> Veggie Pets Algae Oil, vagy hasonló halolajmentes algaolaj<br>
+      <strong>+ Biotin:</strong> 50–100 µg/nap (bajusz/szőr regenerációhoz, ha az RC Anall. okozta a problémát)
+    </div>
+  </div>
+
+  <!-- Venandi Ló -->
+  <div style="background:#0a1a2a;border:2px solid #5599ff;border-radius:12px;padding:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+      <div style="font-size:0.9rem;color:#88bbff;font-weight:700;">🐴 Venandi Monoprotein Ló</div>
+      <span style="background:#002244;color:#66aaff;border-radius:20px;padding:2px 10px;font-size:0.68rem;font-weight:700;">✅ AJÁNLOTT #2</span>
+    </div>
+    <div style="font-size:0.72rem;color:#aaa;margin-bottom:8px;">Nedves 6×200g · Lóhús 67% · Egyetlen állati fehérje · Soha nem volt kitéve</div>
+    <div style="font-size:0.72rem;color:#ccc;line-height:1.7;">
+      <strong style="color:#88bbff;">Fehérje:</strong> Ló (egyetlen forrás) — rendkívül novel fehérje, nagyon alacsony allergenitás<br>
+      <strong style="color:#88bbff;">Omega-3:</strong> NINCS halaolaj ✅ — omega-3 nem számottevő<br>
+      <strong style="color:#88bbff;">Előny:</strong> Nedves táplálék → jobb hidratáció, könnyebb elfogyasztás. Magas hústartalm (67%).
+    </div>
+    <div style="background:#0a1a2a;border:1px solid #334466;border-radius:8px;padding:10px;margin-top:10px;font-size:0.71rem;color:#aaccdd;">
+      <strong style="color:#66aaff;">💊 Szükséges kiegészítő:</strong><br>
+      <strong>Algaolaj</strong> — omega-3 hiány pótlása kötelező ennél a tápnál<br>
+      <strong>Dózis:</strong> 0,5 ml/nap az ételre cseppentve<br>
+      <strong>Taurin:</strong> Ellenőrizd a taurin tartalmat a cimkén — nedves húsalapú tápokban általában elegendő, de fontos
+    </div>
+  </div>
+
+  <!-- Venandi Borjú -->
+  <div style="background:#0a1a2a;border:2px solid #7799cc;border-radius:12px;padding:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+      <div style="font-size:0.9rem;color:#99bbee;font-weight:700;">🐄 Venandi Monoprotein Borjú</div>
+      <span style="background:#112233;color:#88aadd;border-radius:20px;padding:2px 10px;font-size:0.68rem;font-weight:700;">✅ AJÁNLOTT #3</span>
+    </div>
+    <div style="font-size:0.72rem;color:#aaa;margin-bottom:8px;">Nedves 6×200g · Borjúhús 70% · Egyetlen állati fehérje · Soha nem volt kitéve</div>
+    <div style="font-size:0.72rem;color:#ccc;line-height:1.7;">
+      <strong style="color:#99bbee;">Fehérje:</strong> Borjú (egyetlen forrás) — novel fehérje, nem volt kitéve<br>
+      <strong style="color:#99bbee;">Omega-3:</strong> NINCS halaolaj ✅ — omega-3 nem számottevő<br>
+      <strong style="color:#99bbee;">Megjegyzés:</strong> Borjú és szarvasmarha (marha) rokon fehérjék — ha később marhára allergiát találnak, ez is érintett lehet. Szarvas/vadhússal nincs ilyen kapcsolat.
+    </div>
+    <div style="background:#0a1a2a;border:1px solid #334466;border-radius:8px;padding:10px;margin-top:10px;font-size:0.71rem;color:#aaccdd;">
+      <strong style="color:#88aadd;">💊 Szükséges kiegészítő:</strong><br>
+      <strong>Algaolaj</strong> — omega-3 hiány pótlása kötelező<br>
+      <strong>Dózis:</strong> 0,5 ml/nap az ételre cseppentve<br>
+      <strong>Taurin:</strong> Ellenőrizd a cimkén
+    </div>
+  </div>
+
+  <!-- Concept for Life Insect -->
+  <div style="background:#2a1000;border:2px solid #ff6600;border-radius:12px;padding:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+      <div style="font-size:0.9rem;color:#ffaa55;font-weight:700;">🪲 Concept for Life Hypoallergenic Insect</div>
+      <span style="background:#440000;color:#ff8844;border-radius:20px;padding:2px 10px;font-size:0.68rem;font-weight:700;">⚠️ KOCKÁZATOS</span>
+    </div>
+    <div style="font-size:0.72rem;color:#aaa;margin-bottom:8px;">Száraz 350g · Fekete katonalégy lárva · Vet diéta</div>
+    <div style="font-size:0.72rem;color:#ccc;line-height:1.7;">
+      <strong style="color:#ff8844;">Fehérje:</strong> Hermetia illucens (fekete katonalégy) — novel fehérje<br>
+      <strong style="color:#ff8844;">Omega-3:</strong> <span style="color:#ff4444;font-weight:700;">TARTALMAZ 3,5% LAZACOLAJAT ❌</span> + algaolaj<br>
+      <strong style="color:#ff8844;">⚠️ Kockázat 1:</strong> A lazacolaj halallergiás macskánál reakciót válthat ki — ez az elsődleges gond.<br>
+      <strong style="color:#ff8844;">⚠️ Kockázat 2:</strong> A rovarok (ízeltlábúak) és a rákok (garnélarák, amelyre ki volt téve) azonos tropomiozin fehérjét tartalmaznak → keresztreaktivitás lehetséges.
+    </div>
+    <div style="background:#2a0a00;border:1px solid #884400;border-radius:8px;padding:10px;margin-top:10px;font-size:0.71rem;color:#ffccaa;">
+      <strong style="color:#ff8844;">💊 Kiegészítő NEM szükséges</strong> (tartalmaz algaolajat is), DE:<br>
+      <strong>Ajánlás:</strong> Ne adj most — a lazacolaj kizáró ok. Ha nyúl/ló/borjú provokáció sikerrel zárul és a halolaj-allergiát pontosítani akarjuk, akkor kerülhet sorra utolsóként.
+    </div>
+  </div>
+
+</div>
+
+<!-- ALOM ÉRTÉKELÉS -->
+<div style="background:#2a1a00;border:2px solid #cc7700;border-radius:12px;padding:16px;margin-bottom:16px;">
+  <div style="font-size:0.95rem;color:#ffcc55;font-weight:700;margin-bottom:10px;">🪣 Sanicat Illatosított Alom — Nem ajánlott allergiás macskának!</div>
+  <div style="font-size:0.75rem;color:#ddd;line-height:1.8;">
+    <strong style="color:#ffcc55;">Termék:</strong> Sanicat csomósodó, vanília &amp; mandarin illattal<br>
+    <strong style="color:#ff8844;">Probléma:</strong> Az illatanyagok (vanília- és narancsszármazékok) kémiai irritánsként hathatnak allergiás macskáknál. A cica a tappancsát és végbéltáját nyalja, így az illatanyagok bejutnak a szervezetbe. Ez <strong>összezavarhatja az eliminációs diéta értékelését</strong> — tüneteket válthat ki, amelyeket élelmiszer-allergiaként értékelünk.<br>
+    <strong style="color:#55ff99;">Javaslat:</strong> Válts <strong>illatmentes</strong> glomhoz. Ajánlott típusok allergiás macskának:
+    <ul style="margin:6px 0 0 16px;color:#ccc;">
+      <li>Illatmentes bentonit alom (pl. Catsan Natural, Ever Clean Unscented)</li>
+      <li>Szilíkagél alom illatanyag nélkül</li>
+      <li>Préselt fenyő/fa pellet alom (természetes, illatanyagmentes)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- PROVOKÁCIÓS SORREND -->
+<div style="background:#111828;border:1px solid #2a3a5a;border-radius:12px;padding:18px 22px;margin-bottom:16px;">
+  <div style="font-size:0.95rem;color:#a8c4ff;font-weight:700;margin-bottom:12px;">📋 Javasolt Provokációs Sorrend (jelenlegi készletből)</div>
+  <div style="font-size:0.78rem;color:#ddd;line-height:1.9;">
+    <span style="background:#003300;border:1px solid #336633;border-radius:4px;padding:2px 8px;color:#55ff99;font-weight:700;margin-right:6px;">1.</span>
+    <strong style="color:#88ffbb;">Vet-Concept Nyúl</strong> (száraz) — 2 hét, önállóan + 0,5ml algaolaj/nap. Ugyanaz a megbízható márka mint a tolerált kecske.<br><br>
+    <span style="background:#001133;border:1px solid #335588;border-radius:4px;padding:2px 8px;color:#66aaff;font-weight:700;margin-right:6px;">2.</span>
+    <strong style="color:#88bbff;">Venandi Ló</strong> (nedves) — 2 hét, önállóan + 0,5ml algaolaj/nap. Extrém novel fehérje, szinte nulla allergenitás.<br><br>
+    <span style="background:#001133;border:1px solid #335588;border-radius:4px;padding:2px 8px;color:#88aadd;font-weight:700;margin-right:6px;">3.</span>
+    <strong style="color:#99bbee;">Venandi Borjú</strong> (nedves) — 2 hét, önállóan + 0,5ml algaolaj/nap. Figyelj a marhával való keresztreaktivitásra.<br><br>
+    <span style="background:#330000;border:1px solid #662200;border-radius:4px;padding:2px 8px;color:#ff7744;font-weight:700;margin-right:6px;">4.</span>
+    <strong style="color:#ffaa55;">Concept for Life Insect</strong> — egyelőre ne add (lazacolaj + garnéla keresztreaktivitás kockázat). Csak ha az összes többi fehérje már tisztázva van.
+  </div>
+</div>
+
+<!-- KIEGÉSZÍTŐ ÖSSZEFOGLALÓ -->
+<div style="background:#111828;border:1px solid #2a3a5a;border-radius:12px;padding:18px 22px;margin-bottom:16px;">
+  <div style="font-size:0.95rem;color:#a8c4ff;font-weight:700;margin-bottom:12px;">💊 Kiegészítők — Minden Táphoz</div>
+  <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+  <table style="border-collapse:collapse;font-size:0.74rem;width:100%;min-width:420px;">
+    <thead>
+      <tr style="background:#1a1a2e;">
+        <th style="padding:7px 10px;text-align:left;color:#a8c4ff;border-bottom:2px solid #333;">Táp</th>
+        <th style="padding:7px 10px;text-align:left;color:#a8c4ff;border-bottom:2px solid #333;">Omega-3 pótlás</th>
+        <th style="padding:7px 10px;text-align:left;color:#a8c4ff;border-bottom:2px solid #333;">Egyéb kiegészítő</th>
+        <th style="padding:7px 10px;text-align:left;color:#a8c4ff;border-bottom:2px solid #333;">Adagolás</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid #1e1e2e;">
+        <td style="padding:6px 10px;color:#aadd77;">🐐 VC Kecske (jelenlegi)</td>
+        <td style="padding:6px 10px;color:#64c8ff;">Algaolaj kötelező</td>
+        <td style="padding:6px 10px;color:#aaa;">Biotin (bajusznövekedés)</td>
+        <td style="padding:6px 10px;color:#ccc;">0,5 ml algaolaj/nap + 50–100µg biotin/nap</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1e1e2e;">
+        <td style="padding:6px 10px;color:#88ffbb;">🐇 VC Nyúl</td>
+        <td style="padding:6px 10px;color:#64c8ff;">Algaolaj kötelező</td>
+        <td style="padding:6px 10px;color:#aaa;">Biotin opcionális</td>
+        <td style="padding:6px 10px;color:#ccc;">0,5 ml algaolaj/nap</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1e1e2e;">
+        <td style="padding:6px 10px;color:#88bbff;">🐴 Venandi Ló (nedves)</td>
+        <td style="padding:6px 10px;color:#64c8ff;">Algaolaj kötelező</td>
+        <td style="padding:6px 10px;color:#aaa;">Taurin ellenőrizd</td>
+        <td style="padding:6px 10px;color:#ccc;">0,5 ml algaolaj/nap az ételre</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1e1e2e;">
+        <td style="padding:6px 10px;color:#99bbee;">🐄 Venandi Borjú (nedves)</td>
+        <td style="padding:6px 10px;color:#64c8ff;">Algaolaj kötelező</td>
+        <td style="padding:6px 10px;color:#aaa;">Taurin ellenőrizd</td>
+        <td style="padding:6px 10px;color:#ccc;">0,5 ml algaolaj/nap az ételre</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1e1e2e;">
+        <td style="padding:6px 10px;color:#ffaaaa;">🪶 RC Anallergenic (jelenlegi)</td>
+        <td style="padding:6px 10px;color:#ff7777;">Tartalmaz halaolajat — ⚠️</td>
+        <td style="padding:6px 10px;color:#ffcc88;">Biotin sürgős (bajusz!), aminosav-pótlás</td>
+        <td style="padding:6px 10px;color:#ccc;">50–100µg biotin/nap; egyezz az orvossal</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 10px;color:#ffaa55;">🪲 CfL Insect</td>
+        <td style="padding:6px 10px;color:#ff7777;">Tartalmaz lazacolajat ❌</td>
+        <td style="padding:6px 10px;color:#aaa;">—</td>
+        <td style="padding:6px 10px;color:#888;">Egyelőre ne add</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <div style="margin-top:12px;font-size:0.72rem;color:#888;line-height:1.7;">
+    <strong style="color:#64c8ff;">Algaolaj adagolási útmutató (~4kg macskának):</strong> Napi 0,5 ml elegendő. Cseppentsd közvetlenül az ételre étkezés előtt. Hűtőben tárold, 4–6 hét alatt fogyasszátok el. <em>Mindig egyeztesd az állatorvossal, különösen ha más gyógyszert is szed.</em>
+  </div>
+</div>
+
+<br>
+
+<!-- ═══════════════════════════ VETERINÁRI ÉRTÉKELÉS ═══════════════════════════ -->
+<h2>🩺 Veterinári Értékelés &amp; Diagnózis</h2>
+
+<div style="background:#0d1a0d;border:2px solid #ff4444;border-radius:12px;padding:18px 22px;margin-bottom:18px;">
+  <div style="font-size:0.8rem;color:#ff9999;font-style:italic;margin-bottom:6px;">⚠️ Ez az értékelés tájékoztató jellegű, nem helyettesíti a személyes állatorvosi vizsgálatot.</div>
+</div>
+
+<!-- DIAGNÓZIS -->
+<div style="background:#111828;border:1px solid #2a3a5a;border-radius:12px;padding:20px 24px;margin-bottom:16px;">
+  <div style="font-size:1rem;color:#a8c4ff;font-weight:700;margin-bottom:14px;border-bottom:1px solid #2a3a5a;padding-bottom:8px;">📋 Munkavégzési diagnózis</div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+    <div style="background:#1a1a2e;border-radius:8px;padding:14px;">
+      <div style="font-size:0.78rem;color:#64c8ff;font-weight:700;margin-bottom:6px;">Elsődleges diagnózis</div>
+      <div style="font-size:0.85rem;color:#eee;font-weight:600;">Macska élelmiszer-allergia (CAFR)</div>
+      <div style="font-size:0.72rem;color:#aaa;margin-top:4px;">Cutaneous Adverse Food Reaction · Bőrtünetekkel járó táplálékérzékenység</div>
+    </div>
+    <div style="background:#1a1a2e;border-radius:8px;padding:14px;">
+      <div style="font-size:0.78rem;color:#64c8ff;font-weight:700;margin-bottom:6px;">Bőrtünet típusa</div>
+      <div style="font-size:0.85rem;color:#eee;font-weight:600;">Miliáris dermatitis</div>
+      <div style="font-size:0.72rem;color:#aaa;margin-top:4px;">Jellegzetes kérges papulák, viszketés — klasszikus tünet táplálékallergénre</div>
+    </div>
+    <div style="background:#1a1a2e;border-radius:8px;padding:14px;">
+      <div style="font-size:0.78rem;color:#64c8ff;font-weight:700;margin-bottom:6px;">Kezdet kora</div>
+      <div style="font-size:0.85rem;color:#eee;font-weight:600;">~4–7 hónapos kor</div>
+      <div style="font-size:0.72rem;color:#aaa;margin-top:4px;">Tipikus: korai szenzitizáció gyors ismételt expozíció esetén (napi tonhalas snack)</div>
+    </div>
+    <div style="background:#1a1a2e;border-radius:8px;padding:14px;">
+      <div style="font-size:0.78rem;color:#64c8ff;font-weight:700;margin-bottom:6px;">Immuntípus (feltételezett)</div>
+      <div style="font-size:0.85rem;color:#eee;font-weight:600;">Kevert IgE + késői típusú (IV.)</div>
+      <div style="font-size:0.72rem;color:#aaa;margin-top:4px;">A heves, gyors reakció IgE-mediáltra utal; a fennmaradó viszketés késői komponenst is jelez</div>
+    </div>
+  </div>
+
+  <div style="background:#1a2010;border:1px solid #446622;border-radius:8px;padding:12px 16px;font-size:0.78rem;color:#ccdd99;line-height:1.8;">
+    <strong style="color:#aaff55;">Kizárandó differenciáldiagnózisok:</strong><br>
+    🦟 <strong>Bolhaallergia (FAD)</strong> — a leggyakoribb miliáris dermatitis ok macskáknál; Credelio-val kezelve (márc. 24.), mégis megmaradt a tünet → a bolha valószínűleg nem az egyedüli ok, de kizárni fontos<br>
+    🌿 <strong>Környezeti atópia</strong> — nem kizárható, de a diétaváltásokkal korrelál a tünetek súlyossága → táplálék-komponens dominál<br>
+    🧫 <strong>Neurogén dermatitis</strong> — felvetette az állatorvos (márc. 24.): Neurontin (gabapentin) felírva, amely neuropátiás viszketés esetén hatásos; ha a táplálékallergén eltávolítása nem vezet remisszióhoz, ez is szerepet játszhat<br>
+    🧪 <strong>Kontakt dermatitis</strong> — kevésbé valószínű az érintett terület alapján; de a parfümözött alom (Sanicat vanília+mandarin) potenciális irritáns forrás
+  </div>
+</div>
+
+<!-- ALLERGÉN VALÓSZÍNŰSÉG – KÓRLEFOLYÁS ALAPJÁN -->
+<div style="background:#111828;border:1px solid #2a3a5a;border-radius:12px;padding:20px 24px;margin-bottom:16px;">
+  <div style="font-size:1rem;color:#a8c4ff;font-weight:700;margin-bottom:14px;border-bottom:1px solid #2a3a5a;padding-bottom:8px;">🔬 Valószínű allergének — a kórlefolyás alapján</div>
+
+  <!-- Allergen 1 -->
+  <div style="margin-bottom:12px;background:#1a1a2e;border-radius:8px;padding:14px 16px;border-left:4px solid #ff3333;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <span style="font-size:0.88rem;color:#ff7777;font-weight:700;">🐟 Halféhérje (tengeri halak összessége)</span>
+      <span style="background:#ff2222;color:#fff;border-radius:20px;padding:2px 10px;font-size:0.7rem;font-weight:700;">LEGVALÓSZÍNŰBB ★★★★★</span>
+    </div>
+    <div style="font-size:0.75rem;color:#ccc;line-height:1.8;">
+      <strong style="color:#ff9999;">Miért:</strong> A tünetek a maximális halexpozíció idején jelentek meg (Farmina Ocean + Orijen, ahol a tonhalas snackekkel együtt a diéta ~80%-a hal volt). A szenzitizáció valószínűleg a korai, napi Churu tonhallal indult el. Az összes csontos hal (tonhal, lazac, hering, makréla, tőkehal, pollakk) magas keresztreaktivitást mutat egymással — ha egyre allergiás, valószínűleg mindegyikre az.<br>
+      <strong style="color:#ff9999;">Kritikus bizonyíték:</strong> Farmina Ultrahypo (hidrolizált tengeri hal) → 15 g után heves reakció. Ez különösen súlyos szenzitizációt jelez: még az emésztett, töredékekre bontott halféhérje is immunreakciót vált ki.
+    </div>
+  </div>
+
+  <!-- Allergen 2 -->
+  <div style="margin-bottom:12px;background:#1a1a2e;border-radius:8px;padding:14px 16px;border-left:4px solid #cc5500;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <span style="font-size:0.88rem;color:#ff9944;font-weight:700;">🐟 Halaolaj (EPA/DHA — még ha nem is fehérje)</span>
+      <span style="background:#cc5500;color:#fff;border-radius:20px;padding:2px 10px;font-size:0.7rem;font-weight:700;">GYANÚS ★★★★☆</span>
+    </div>
+    <div style="font-size:0.75rem;color:#ccc;line-height:1.8;">
+      <strong style="color:#ffaa66;">Miért:</strong> A Hill's z/d hidrolizált <em>csirkemájat</em> tartalmaz (nem halat), mégis úgy tűnt, hogy viszketést okoz — de fish oil-t is tartalmaz. Az RC Anallergenic szintén tartalmaz meg nem nevezett halaolajat. Ha a macska nem tisztul meg teljesen az eliminációs fázis alatt, a halaolaj lehet az ok. A halaolajban ugyan nincsenek teljes fehérjék, de allergiás egyedekben fennmaradó peptidnyomok is elegendők lehetnek a reakcióhoz.
+    </div>
+  </div>
+
+  <!-- Allergen 3 -->
+  <div style="margin-bottom:12px;background:#1a1a2e;border-radius:8px;padding:14px 16px;border-left:4px solid #886600;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <span style="font-size:0.88rem;color:#ddaa44;font-weight:700;">🐔 Csirke / Baromfi</span>
+      <span style="background:#665500;color:#fff;border-radius:20px;padding:2px 10px;font-size:0.7rem;font-weight:700;">KEVÉSBÉ VALÓSZÍNŰ ★★☆☆☆</span>
+    </div>
+    <div style="font-size:0.75rem;color:#ccc;line-height:1.8;">
+      <strong style="color:#ddaa44;">Miért:</strong> Háromszor kapott csirkét (Whiskas, RC Kitten, Orijen) — de az Orijen egyszerre tartalmazott csirkét ÉS tengeri halakat, így nem szétválasztható. <strong style="color:#88ff88;">Fontos új adat:</strong> az RC GI Low Fat (csirke alapú, kevés halaolajjal) kipróbálásakor az állatorvos feljegyezte, hogy a viszketés <em>csökkent</em> — ha csirkére is allergiás lenne, ez nem javulást hozna. A Hill's z/d (hidrolizált csirkemáj) esetén az enyhe jelzés valószínűleg a benne lévő halaolajnak tudható be. <strong>Összesség: a csirke valószínűleg tolerált, de megerősítés szükséges.</strong>
+    </div>
+  </div>
+
+  <!-- Allergen 4 -->
+  <div style="margin-bottom:4px;background:#1a1a2e;border-radius:8px;padding:14px 16px;border-left:4px solid #444488;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <span style="font-size:0.88rem;color:#9999ee;font-weight:700;">🦐 Garnélarák / Puhatestűek</span>
+      <span style="background:#333366;color:#aaa;border-radius:20px;padding:2px 10px;font-size:0.7rem;font-weight:700;">BIZONYTALAN ★★☆☆☆</span>
+    </div>
+    <div style="font-size:0.75rem;color:#ccc;line-height:1.8;">
+      Egy hónapig kapott (Farmina Ocean). Alacsonyabb keresztreaktivitás a halakkal. Nem vezethető vissza egyértelműen a tünetek megjelenésére, de a Farmina Ocean fázis egybeesik a tünetek lehetséges kezdetével.
+    </div>
+  </div>
+</div>
+
+<!-- REAKCIÓK ELEMZÉSE -->
+<div style="background:#111828;border:1px solid #2a3a5a;border-radius:12px;padding:20px 24px;margin-bottom:16px;">
+  <div style="font-size:1rem;color:#a8c4ff;font-weight:700;margin-bottom:14px;border-bottom:1px solid #2a3a5a;padding-bottom:8px;">⚡ Reakciók elemzése — mit mondanak maguk a tünetek?</div>
+
+  <div style="display:flex;flex-direction:column;gap:10px;">
+
+    <div style="background:#2a0808;border:1px solid #aa2222;border-radius:8px;padding:12px 16px;">
+      <div style="font-size:0.8rem;color:#ff8888;font-weight:700;margin-bottom:4px;">🚨 Farmina Ultrahypo — 15 g → heves reakció</div>
+      <div style="font-size:0.74rem;color:#ccc;line-height:1.7;">
+        Ez a legfontosabb reakció. A hidrolizált fehérje &lt;10 kDa-os peptidekre van bontva — normálisan ezek nem immunogenikusak. Hogy mégis erős reakció jött, két dolgot jelent:<br>
+        <strong style="color:#ffaaaa;">1.</strong> A szenzitizáció rendkívül súlyos fokú — az immunrendszer még a töredékeket is felismeri (epitópok fennmaradása).<br>
+        <strong style="color:#ffaaaa;">2.</strong> A lazacolaj önmagában is hordozhat elegendő fehérjenyomot a reakcióhoz erősen szenzitizált egyedben.<br>
+        Klinikai jelentőség: ez a macska valószínűleg <em>nem reagálna jól</em> egyetlen hal-alapú hidrolizált fehérjéjű élelmiszer sem — a standard hypoallergén diéták halból készülő változatai kizárhatók.
+      </div>
+    </div>
+
+    <div style="background:#1a1500;border:1px solid #886600;border-radius:8px;padding:12px 16px;">
+      <div style="font-size:0.8rem;color:#ffcc44;font-weight:700;margin-bottom:4px;">⚠️ Hill's z/d — kevés evés, enyhe viszketés gyanúja</div>
+      <div style="font-size:0.75rem;color:#ccc;line-height:1.7;">
+        A z/d fehérjeforrása hidrolizált csirkemáj — hal nincs benne. Mégis jelezte a gazdája, hogy viszket. Három magyarázat:<br>
+        <strong style="color:#ddaa44;">A)</strong> A fish oil a z/d-ben is jelen van → ez váltja ki (megerősíti a halaolaj-teóriát).<br>
+        <strong style="color:#ddaa44;">B)</strong> Csirke is allergiás (másodlagos allergia) → a hidrolizált csirkemáj töredékei is reagálnak.<br>
+        <strong style="color:#ddaa44;">C)</strong> Az adag túl kicsi volt, a jel nem megbízható — szubjektív megfigyelés véletlenszerű viszketéssel.<br>
+        <em>Egyelőre nem bizonyított — de figyelemre méltó.</em>
+      </div>
+    </div>
+
+    <div style="background:#0a1f0a;border:1px solid #336633;border-radius:8px;padding:12px 16px;">
+      <div style="font-size:0.8rem;color:#88ff88;font-weight:700;margin-bottom:4px;">✅ Vet Concept Kecske — 2 hét, nincs reakció</div>
+      <div style="font-size:0.75rem;color:#ccc;line-height:1.7;">
+        Egyetlen állati fehérje (kecske), <strong>halaolaj nélkül</strong>, növényi alapú omega-3. Ez az egyetlen vizsgált élelmiszer, amelyből mindkét gyanúsított hiányzik (hal ÉS halaolaj) — és nincs reakció. Ez erős megerősítése annak, hogy a hal/halaolaj a kiváltó ok, és a kecske biztonságos.
+      </div>
+    </div>
+
+    <div style="background:#111828;border:1px solid #335588;border-radius:8px;padding:12px 16px;">
+      <div style="font-size:0.8rem;color:#88aaff;font-weight:700;margin-bottom:4px;">🔵 RC Anallergenic — tollhidrolizátum + halaolaj · ⚠️ bajusz töredezés!</div>
+      <div style="font-size:0.75rem;color:#ccc;line-height:1.7;">
+        A toll-hidrolizátum valószínűleg tolerált (nagyon kis peptidek, nem hal). <strong>DE halaolajt tartalmaz</strong> — ami hal-allergiás macskánál nem ideális eliminációs diéta.<br><br>
+        <strong style="color:#ffbb44;">🐾 Bajusztörés — táplálkozási hiányosság:</strong> A toll-hidrolizátum egyedüli fehérjeforrásként aminosav-hiányos: alacsony metionin, cisztein és lizin tartalom → ezek a keratin szintézis kulcsaminosavai (szőr, bajusz, körmök). Ez magyarázza a bajusz töredezését. <strong>Biotin + metionin-tartalmú kiegészítő javasolt</strong> (pl. macska-specifikus bőr-szőr kiegészítő), ill. minél hamarabb váltani teljesértékű fehérjeforrásra (pl. Vet-Concept Nyúl).
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- JAVASLATOK -->
+<div style="background:#111828;border:1px solid #2a3a5a;border-radius:12px;padding:20px 24px;margin-bottom:16px;">
+  <div style="font-size:1rem;color:#a8c4ff;font-weight:700;margin-bottom:14px;border-bottom:1px solid #2a3a5a;padding-bottom:8px;">💊 Javaslatok — teendők sorrendben</div>
+
+  <div style="display:flex;flex-direction:column;gap:8px;font-size:0.78rem;color:#ddd;line-height:1.8;">
+
+    <div style="background:#1a1a2e;border-radius:8px;padding:12px 16px;border-left:3px solid #5577ff;">
+      <strong style="color:#aaccff;">1. Azonnali: Halaolaj kivonása az eliminációs diétából</strong><br>
+      Az RC Anallergenic fish oil-t tartalmaz. Ha lehetséges, kérd az állatorvostól a váltást egy <em>teljesen hal- és halaolaj-mentes</em> eliminációs élelmiszerre (pl. Vet Concept Kecske főételként, algaolaj omega-3 kiegészítőként). Ez az igazi "fehér lap" egy halallergiás macskánál.
+    </div>
+
+    <div style="background:#1a1a2e;border-radius:8px;padding:12px 16px;border-left:3px solid #5577ff;">
+      <strong style="color:#aaccff;">2. Omega-3: Váltás algaolajra</strong><br>
+      Algaolaj (mikroalga DHA/EPA) — egyetlen halamentes preformált omega-3 forrás macskáknak. Napi 250–500 mg DHA+EPA elegendő egy felnőtt macskának. Cseppentős formában adható az ételre. Mindenképpen egyeztess az állatorvossal az adagolásról.
+    </div>
+
+    <div style="background:#1a1a2e;border-radius:8px;padding:12px 16px;border-left:3px solid #5577ff;">
+      <strong style="color:#aaccff;">3. Eliminációs fázis: minimum 10–12 hét szigorú diéta</strong><br>
+      Semmi más étel, snack, ínyenczség a meghatározott eledelen kívül. A 8 hétnél rövidebb eliminációs periódus 25%-ban álnegatív eredményt ad. Ha 12 hét után sincs javulás → valószínűleg más (környezeti) tényező is szerepel.
+    </div>
+
+    <div style="background:#1a1a2e;border-radius:8px;padding:12px 16px;border-left:3px solid #5577ff;">
+      <strong style="color:#aaccff;">4. Bolhakezelés párhuzamosan</strong><br>
+      Bolhaallergiás dermatitis klinikailag megkülönböztethetetlen az élelmiszer-allergiától, és egyszerre is fennállhat. Adjál hatékony bolhaellenes preparátumot (pl. Bravecto, Nexgard Spectra macska) — bolhák nélkül is, megelőzőleg. Ha a bőrkép ezzel is javul, komponens-allergia igazolt.
+    </div>
+
+    <div style="background:#1a1a2e;border-radius:8px;padding:12px 16px;border-left:3px solid #5577ff;">
+      <strong style="color:#aaccff;">5. Provokációs sorrend — teljes remisszió után</strong><br>
+      <span style="color:#88ff88;">1. Nyúl</span> (legbiztonságosabb, nincs keresztreaktivitás) →
+      <span style="color:#88ffdd;">2. Kacsa</span> →
+      <span style="color:#88ddff;">3. Szarvas/Vadhús</span> →
+      <span style="color:#ddaaff;">4. Csirke</span> (utoljára, mert gyanús) →
+      <span style="color:#ffcc88;">5. Tőkehal/Lazac</span> (megerősítéshez, de várható pozitív reakció)<br>
+      Minden fehérjét <strong>2 hétig</strong> önállóan, mindenféle más összetevő nélkül, egy-fehérjés eledel formájában adj. Reakció visszatérte = az adott fehérje allergén.
+    </div>
+
+    <div style="background:#1a1a2e;border-radius:8px;padding:12px 16px;border-left:3px solid #5577ff;">
+      <strong style="color:#aaccff;">6. Szérológiai allergiateszt (opcionális)</strong><br>
+      IgE-alapú vérteszt (ELISA, pl. Sensitest, Heska) elvégezhető — de macskáknál a specificitása korlátozott, az eredmény <em>nem helyettesíti</em> az eliminációs-provokációs diétát. Hasznos lehet a csirke-allergia gyanú megerősítésére vagy kizárására, mielőtt a 4. lépéshez ér.
+    </div>
+
+    <div style="background:#1a1a2e;border-radius:8px;padding:12px 16px;border-left:3px solid #5577ff;">
+      <strong style="color:#aaccff;">7. Hosszú távú diéta</strong><br>
+      Ha az allergiás fehérjék azonosítva vannak: kerüld azokat egész életén át. A macska élhet teljesen egészségesen hal nélkül. A kecsketartalmú élelmiszerek (pl. Vet Concept Goat) és a nyúl/vadhús alapú ételek kiváló hosszú távú alternatívák.
+    </div>
+  </div>
+</div>
+
+<!-- ÖSSZEFOGLALÓ TÁBLÁZAT -->
+<div style="background:#111828;border:1px solid #2a3a5a;border-radius:12px;padding:20px 24px;margin-bottom:16px;">
+  <div style="font-size:1rem;color:#a8c4ff;font-weight:700;margin-bottom:14px;border-bottom:1px solid #2a3a5a;padding-bottom:8px;">📊 Összefoglaló — Fehérjék státusza</div>
+  <div style="overflow-x:auto;">
+  <table style="border-collapse:collapse;font-size:0.75rem;width:100%;">
+    <thead>
+      <tr style="background:#1a1a2e;">
+        <th style="padding:8px 12px;text-align:left;color:#a8c4ff;border-bottom:2px solid #333;">Fehérje / Forrás</th>
+        <th style="padding:8px 12px;text-align:center;color:#a8c4ff;border-bottom:2px solid #333;">Státusz</th>
+        <th style="padding:8px 12px;text-align:left;color:#a8c4ff;border-bottom:2px solid #333;">Indoklás</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid #1e1e2e;">
+        <td style="padding:7px 12px;color:#ddd;">🐟 Összes tengeri hal (tonhal, lazac, hering, makréla, tőkehal, pollakk)</td>
+        <td style="padding:7px 12px;text-align:center;"><span style="background:#660000;color:#ff8888;border-radius:4px;padding:2px 8px;font-weight:700;font-size:0.7rem;">ALLERGÉN ✗</span></td>
+        <td style="padding:7px 12px;color:#aaa;font-size:0.72rem;">Hidrolizált formában is heves reakció (Farmina Ultrahypo). Teljes kizárás szükséges.</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1e1e2e;">
+        <td style="padding:7px 12px;color:#ddd;">🐟 Halaolaj (EPA/DHA hal alapú)</td>
+        <td style="padding:7px 12px;text-align:center;"><span style="background:#553300;color:#ffaa55;border-radius:4px;padding:2px 8px;font-weight:700;font-size:0.7rem;">GYANÚS ⚠</span></td>
+        <td style="padding:7px 12px;color:#aaa;font-size:0.72rem;">Hill's z/d és RC Anallergenic tartalmaz — enyhe jelek. Kerülendő, algaolajra váltani.</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1e1e2e;">
+        <td style="padding:7px 12px;color:#ddd;">🦐 Garnélarák / Puhatestűek</td>
+        <td style="padding:7px 12px;text-align:center;"><span style="background:#553300;color:#ffaa55;border-radius:4px;padding:2px 8px;font-weight:700;font-size:0.7rem;">BIZONYTALAN ⚠</span></td>
+        <td style="padding:7px 12px;color:#aaa;font-size:0.72rem;">Egyszer kapott (Farmina Ocean). Kerülendő az eliminációs fázisban.</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1e1e2e;">
+        <td style="padding:7px 12px;color:#ddd;">🐔 Csirke / Baromfi</td>
+        <td style="padding:7px 12px;text-align:center;"><span style="background:#223311;color:#aadd66;border-radius:4px;padding:2px 8px;font-weight:700;font-size:0.7rem;">VALÓSZÍNŰLEG OK ✓?</span></td>
+        <td style="padding:7px 12px;color:#aaa;font-size:0.72rem;">RC GI Low Fat (csirke) → viszketés csökkent. Hill's z/d jelzés valószínűleg a halaolajnak köszönhető. Provokációval megerősíteni.</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1e1e2e;">
+        <td style="padding:7px 12px;color:#ddd;">🥚 Tojás</td>
+        <td style="padding:7px 12px;text-align:center;"><span style="background:#443300;color:#ddaa44;border-radius:4px;padding:2px 8px;font-weight:700;font-size:0.7rem;">VIZSGÁLANDÓ ?</span></td>
+        <td style="padding:7px 12px;color:#aaa;font-size:0.72rem;">Kitéve volt, de önálló reakció nem igazolt. Provokálandó.</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1e1e2e;">
+        <td style="padding:7px 12px;color:#ddd;">🐐 Kecske</td>
+        <td style="padding:7px 12px;text-align:center;"><span style="background:#003322;color:#55ff99;border-radius:4px;padding:2px 8px;font-weight:700;font-size:0.7rem;">TOLERÁLT ✅</span></td>
+        <td style="padding:7px 12px;color:#aaa;font-size:0.72rem;">2 hét reakció nélkül. Halaolajmentes volt. Biztonságos alapélelmiszer.</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1e1e2e;">
+        <td style="padding:7px 12px;color:#55ff99;">🐇 Nyúl</td>
+        <td style="padding:7px 12px;text-align:center;"><span style="background:#003322;color:#55ff99;border-radius:4px;padding:2px 8px;font-weight:700;font-size:0.7rem;">KIPRÓBÁLHATÓ ★</span></td>
+        <td style="padding:7px 12px;color:#aaa;font-size:0.72rem;">Soha nem volt kitéve. Alacsony allergenitású, ideális első provokáció.</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1e1e2e;">
+        <td style="padding:7px 12px;color:#55ff99;">🦆 Kacsa</td>
+        <td style="padding:7px 12px;text-align:center;"><span style="background:#003322;color:#55ff99;border-radius:4px;padding:2px 8px;font-weight:700;font-size:0.7rem;">KIPRÓBÁLHATÓ ★</span></td>
+        <td style="padding:7px 12px;color:#aaa;font-size:0.72rem;">Soha nem volt kitéve. Második provokáció jelöltje.</td>
+      </tr>
+      <tr>
+        <td style="padding:7px 12px;color:#55ff99;">🦌 Szarvas / Vadhús / Kenguru</td>
+        <td style="padding:7px 12px;text-align:center;"><span style="background:#003322;color:#55ff99;border-radius:4px;padding:2px 8px;font-weight:700;font-size:0.7rem;">KIPRÓBÁLHATÓ ★</span></td>
+        <td style="padding:7px 12px;color:#aaa;font-size:0.72rem;">Soha nem volt kitéve. Egzotikus fehérjék, minimális allergenitás.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<br>
+<div style="font-size:0.68rem;color:#444;text-align:center;padding-bottom:16px;">
+  Adatok forrása: gyártói összetevőlisták és független macskaeledel-elemző oldalak · Generálva: 2026-05-31 · A receptek változhatnak, mindig ellenőrizd az aktuális összetételt
+</div>
+
+</body>
+</html>
